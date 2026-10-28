@@ -1,0 +1,46 @@
+[
+  {
+    "description": "多意图并发-同时触发RAG和天气工具",
+    "vars": {
+      "query": "买到假货退款要多久？顺便帮我看看今天深圳天气适合出门面交吗？"
+    },
+    "assert": [
+      {
+        "type": "javascript",
+        "value": "const tools = JSON.parse(output); return tools.includes('rag_summarize') && tools.includes('get_weather');"
+      },
+      {
+        "type": "llm-rubric",
+        "value": "评估助手的最终回答：必须同时包含（1）假货退款的流程/时间；（2）深圳的天气情况。如果遗漏了其中任何一个问题，返回 fail。"
+      }
+    ]
+  },
+  {
+    "description": "多意图并发-多步跨工具链",
+    "vars": {
+      "query": "帮我查一下平台对卖假货的处罚规则，然后顺便帮我生成我上个月的报告。"
+    },
+    "assert": [
+      {
+        "type": "javascript",
+        "value": "const tools = JSON.parse(output); const hasRag = tools.includes('rag_summarize'); const hasReport = tools.includes('get_user_id') && tools.includes('fetch_external_data'); return hasRag && hasReport;"
+      },
+      {
+        "type": "llm-rubric",
+        "value": "评估最终回答：是否既回答了平台规则，又生成了一份用户报告。两者必须同时具备。"
+      }
+    ]
+  },
+  {
+    "description": "多意图嵌套-天气查询必须多步定位",
+    "vars": {
+      "query": "杭州的退款规则是什么？以及我这边天气如何？"
+    },
+    "assert": [
+      {
+        "type": "javascript",
+        "value": "const tools = JSON.parse(output); const hasRag = tools.includes('rag_summarize'); const hasLocation = tools.includes('get_user_location'); const hasWeather = tools.includes('get_weather'); return hasRag && hasLocation && hasWeather;"
+      }
+    ]
+  }
+]

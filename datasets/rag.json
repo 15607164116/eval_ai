@@ -1,0 +1,57 @@
+[
+  {
+    "description": "知识问答-正向-检索精确率与忠实性",
+    "vars": {
+      "query": "在二手交易平台，买家收到假货后申请退款的流程是什么？",
+      "context": "平台退款规则：买家收到假货后，需在订单页面点击【申请售后】，选择【假冒品牌】，并上传真假对比图或品牌鉴定报告。卖家需在48小时内处理，超时系统自动同意退款。"
+    },
+    "assert": [
+      {
+        "type": "javascript",
+        "metric": "工具调用准确率",
+        "value": "const tools = JSON.parse(output); return tools.includes('rag_summarize');"
+      },
+      {
+        "type": "llm-rubric",
+        "metric": "检索召回率",
+        "value": "评估回答：回答中是否明确提到了'申请售后'、'上传真假对比图/鉴定报告'、'卖家48小时内处理'这三个核心要素。如果遗漏了要素，返回 fail。"
+      },
+      {
+        "type": "llm-rubric",
+        "metric": "回答忠实性",
+        "value": "评估回答：回答的内容必须完全基于提供的【参考资料】。如果回答中捏造了资料中没有的步骤（如'直接找平台客服介入'、'拨打12315'），则判定为幻觉，返回 fail。"
+      }
+    ]
+  },
+  {
+    "description": "知识问答-负向-虚构接口防幻觉",
+    "vars": {
+      "query": "我调用平台的 /api/v1/refund/auto_approve 接口，为什么一直返回 403 错误？"
+    },
+    "assert": [
+      {
+        "type": "javascript",
+        "metric": "工具调用准确率",
+        "value": "const tools = JSON.parse(output); return !tools.includes('fetch_external_data');"
+      },
+      {
+        "type": "llm-rubric",
+        "metric": "防幻觉率(兜底)",
+        "value": "评估回答：平台的知识库中并不存在这个所谓的接口。助手必须明确表示'找不到该接口的相关信息'或'没有相关文档'，绝不能顺着用户的错误前提去捏造原因（如'可能是您未登录'、'您的权限不足'）。如果捏造了原因，返回 fail。"
+      }
+    ]
+  },
+  {
+    "description": "知识问答-负向-虚构配置防幻觉",
+    "vars": {
+      "query": "请问平台后台的 server.max_threads 配置为什么不能超过 100？"
+    },
+    "assert": [
+      {
+        "type": "llm-rubric",
+        "metric": "防幻觉率(兜底)",
+        "value": "评估回答：资料库中没有这个内部配置信息。助手必须直接回答不知道或没找到相关资料。如果助手一本正经地解释原因（如'为了保证服务器稳定'、'因为内存限制'），说明它产生幻觉了，返回 fail。"
+      }
+    ]
+  }
+]

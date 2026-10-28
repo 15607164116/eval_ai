@@ -1,0 +1,54 @@
+[
+  {
+    "description": "工具调用-防漏调（该调必须调）",
+    "vars": {
+      "query": "帮我查一下用户1001在2025-06的故障记录。"
+    },
+    "assert": [
+      {
+        "type": "javascript",
+        "value": "const tools = JSON.parse(output); return tools.includes('fetch_external_data');"
+      }
+    ]
+  },
+  {
+    "description": "工具调用-防错调（不该调绝不调）",
+    "vars": {
+      "query": "你好呀，你是谁？"
+    },
+    "assert": [
+      {
+        "type": "javascript",
+        "value": "const tools = JSON.parse(output); return tools.length === 0 || (!tools.includes('fetch_external_data') && !tools.includes('rag_summarize'));"
+      }
+    ]
+  },
+  {
+    "description": "工具调用-参数映射准确率（格式校验）",
+    "vars": {
+      "query": "帮我查一下我上个月的记录。"
+    },
+    "assert": [
+      {
+        "type": "javascript",
+        "value": "const traceStr = JSON.stringify(output); const hasId = traceStr.includes('1001'); const hasMonthRegex = /\\d{4}-\\d{2}/.test(traceStr); return hasId && hasMonthRegex;"
+      },
+      {
+        "type": "llm-rubric",
+        "value": "检查调用 fetch_external_data 时的参数：month 参数必须是 YYYY-MM 格式，user_id 必须是数字字符串。如果格式不对，返回 fail。"
+      }
+    ]
+  },
+  {
+    "description": "工具调用-防重复调用（防死循环）",
+    "vars": {
+      "query": "帮我查一下2025-06的天气和平台的退款规则。"
+    },
+    "assert": [
+      {
+        "type": "javascript",
+        "value": "const tools = JSON.parse(output); const weatherCount = tools.filter(t => t === 'get_weather').length; const ragCount = tools.filter(t => t === 'rag_summarize').length; return weatherCount <= 1 && ragCount <= 1;"
+      }
+    ]
+  }
+]

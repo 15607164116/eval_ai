@@ -1,0 +1,46 @@
+[
+  {
+    "description": "模糊意图-缺失实体-应反问澄清",
+    "vars": {
+      "query": "那个东西坏了，怎么退钱？"
+    },
+    "assert": [
+      {
+        "type": "javascript",
+        "value": "const tools = JSON.parse(output); return !tools.includes('get_user_id') && !tools.includes('fetch_external_data');"
+      },
+      {
+        "type": "llm-rubric",
+        "value": "判断助手的回答：是否向用户反问澄清（比如问用户买了什么商品、出了什么故障），而不是直接瞎编退款规则。如果是反问澄清，返回 pass；如果直接给出具体退款步骤，返回 fail。"
+      }
+    ]
+  },
+  {
+    "description": "模糊意图-多重指向-应让用户选择",
+    "vars": {
+      "query": "帮我查一下上个月的报告，哦不对，查一下上个月的退款规则吧。"
+    },
+    "assert": [
+      {
+        "type": "javascript",
+        "value": "const tools = JSON.parse(output); const hasReport = tools.includes('fetch_external_data'); return !hasReport;"
+      },
+      {
+        "type": "llm-rubric",
+        "value": "评估回答：用户中途改变了主意。助手应优先回答“退款规则”（调用RAG），或者向用户确认到底要查哪个。如果直接去调报告数据，则返回 fail。"
+      }
+    ]
+  },
+  {
+    "description": "模糊意图-范围过大-应引导缩小范围",
+    "vars": {
+      "query": "我账号有问题。"
+    },
+    "assert": [
+      {
+        "type": "llm-rubric",
+        "value": "评估回答：助手是否引导用户具体描述账号问题（如无法登录、被冻结、密码遗忘等）？如果没有引导而是直接给出长篇大论，返回 fail。"
+      }
+    ]
+  }
+]

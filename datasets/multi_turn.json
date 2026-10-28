@@ -1,0 +1,45 @@
+[
+  {
+    "description": "多轮测试-实体记忆与跨轮追问",
+    "vars": {
+      "user_id": "1001"
+    },
+    "turns": [
+      {
+        "user": "我想查一下我上个月的交易故障记录。",
+        "assert": [
+          { "type": "javascript", "value": "return output.includes('get_user_id') || output.includes('get_current_month');" }
+        ]
+      },
+      {
+        "user": "那上上个月（2025-08）的呢？",
+        "assert": [
+          { "type": "javascript", "value": "return output.includes('2025-08') && !output.includes('get_user_id');" }
+        ]
+      },
+      {
+        "user": "那能帮我生成一份完整的报告吗？",
+        "assert": [
+          { "type": "llm-rubric", "value": "评估生成的报告，必须同时包含 2025-09（上个月）和 2025-08（上上个月）的数据记录。如果漏了，则返回 fail。" }
+        ]
+      }
+    ]
+  },
+  {
+    "description": "多轮测试-场景切换（防串台）",
+    "turns": [
+      {
+        "user": "买假货退款要多久？",
+        "assert": [
+          { "type": "javascript", "value": "return output.includes('rag_summarize');" }
+        ]
+      },
+      {
+        "user": "先不管退款了，今天杭州天气怎么样？",
+        "assert": [
+          { "type": "javascript", "value": "return output.includes('get_weather') && output.includes('杭州');" }
+        ]
+      }
+    ]
+  }
+]
